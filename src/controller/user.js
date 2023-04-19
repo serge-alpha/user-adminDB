@@ -1,4 +1,10 @@
-const { EncryptPassword } = require("../helper/crptpassword");
+const jwt=require('jsonwebtoken');
+const fs=require('fs');
+
+
+const dev = require("../config");
+const { EncryptPassword, comaparePassword } = require("../helper/crptpassword");
+const sendMail = require("../helper/email");
 const { Token } = require("../helper/store_data_temp");
 const User = require("../model/user");
 
@@ -17,24 +23,104 @@ const createUser=async(req,res)=>{
 
         const isExist= await User.findOne({email:email});
 
-        if(!isExist){
+        if(isExist){
             return res.status(400).json({message:"user with this email already exist"});
         }
         const hashPassword=await EncryptPassword(password);
         const token=await Token({name,email,hashPassword,phone,image});
 
+        //create email to be sent
+
+        const emailData={
+            email,
+            subject:"Verify your email",
+            html:`<h1>Click here to verify your email</h1>
+            <p>Click here to<a href="${dev.app.clientUrl}/auth/activte/${token} target="_blank">activate your account</a></p>`,
+        }
+
+        //sendMail(emailData);
         
-        // const newUser= new User({
-        //     name:req.fields.name,
-        //     email:req.fields.email,
-        //     phone:req.fields.phone,
-        // });
         
-        // // const user=await newUser.save();
         res.status(200).json({message:"user created",hashedpassword:hashPassword,token:token});
     } catch (error) {
         res.status(500).json({message:error.message})
     }
 };
 
-module.exports={createUser};
+const verifyEmail= async(req,res)=>{
+    try { 
+        const {token}=req.body;
+        if(!token){
+            return res.status(404).json({message:"token is missen"})
+        }
+        jwt.verify(token, dev.app.privateKey, async(err, decoded)=> {
+            if (err){
+              return res.status(401).json({message:"token has expired"})
+            }
+               const {name,email,hashPassword,phone,image}=decoded;
+               console.log(decoded)
+              const isExist= await User.findOne({email:email});
+             if(isExist){
+                 return res.status(400).json({message:"user with this email already exist"});
+             }
+             const newUser= new User({
+                name:name,
+                email:email,
+                phone:phone,
+                password:hashPassword,
+                is_verified:1
+            });
+
+            if(image){
+                newUser.image.data=fs.readFileSync(image.path);
+                newUser.image.contentType=image.type;
+            }
+            
+            const user=await newUser.save();
+           await res.status(200).json({message:'User verified', userData:user})
+            });
+          
+       
+    } catch (error) {
+        res.status(500).json({message:error.message})
+    }
+}
+
+const loginUser=async(req,res)=>{
+    try {
+        const {email,password}=req.body; 
+        if(!email||!password){
+            return res.status(404).json({message:"Email or password not found"})
+        }
+        const user= await User.findOne({email:email});
+        if(!user){
+            return res.status(400).json({message:"No user with this email"});
+        }
+        const passWordMatch=await comaparePassword(password,user.password);
+        console.log(passWordMatch);
+        // if(passWordMatch){
+        //     return res.status(400).json({message:"Name or password is wrong"})
+        // }
+        // res.status(200).json({
+        //     message:"Login successful",
+        //     user:{
+        //         name:user.name,
+        //         image:user.image,
+        //         phone:user.phone
+        //     }
+        //  })
+    } catch (error) {
+        
+    }
+}
+
+const logoutUser=(req,res)=>{
+    try {
+        
+
+    } catch (error) {
+        
+    }
+}
+
+module.exports={createUser,verifyEmail,loginUser,logoutUser};

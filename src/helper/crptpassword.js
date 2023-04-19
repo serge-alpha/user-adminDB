@@ -10,4 +10,12 @@ const EncryptPassword=async(password)=>{
     
 }
 
-module.exports={EncryptPassword};
+const comaparePassword=async(password,hashPassword)=>{
+    try {
+        return await  bcrypt.compare(password,hashPassword);
+     } catch (error) {
+          console.log(error)
+     }
+}
+
+module.exports={EncryptPassword,comaparePassword};

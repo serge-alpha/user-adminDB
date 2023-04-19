@@ -24,8 +24,16 @@ const userSchema= new Schema({
         min:6
     },
     image:{
-        type:Buffer,
+        data:Buffer,
         contentType:String
+    },
+    is_admin:{
+        type:Number,
+        default:0
+    },
+    is_verified:{
+        type:Number,
+        default:0
     }
 })
 
