@@ -32,8 +32,12 @@ const userSchema= new Schema({
         default:0
     },
     is_verified:{
-        type:Number,
-        default:0
+        type:Boolean,
+        default:false
+    },
+    is_Banned:{
+        type:Boolean,
+        default:true
     }
 })
 

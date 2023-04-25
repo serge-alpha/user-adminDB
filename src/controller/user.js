@@ -38,7 +38,7 @@ const createUser=async(req,res)=>{
             <p>Click here to<a href="${dev.app.clientUrl}/auth/activte/${token} target="_blank">activate your account</a></p>`,
         }
 
-        //sendMail(emailData);
+        sendMail(emailData);
         
         
         res.status(200).json({message:"user created",hashedpassword:hashPassword,token:token});
@@ -68,7 +68,7 @@ const verifyEmail= async(req,res)=>{
                 email:email,
                 phone:phone,
                 password:hashPassword,
-                is_verified:1
+                is_verified:true
             });
 
             if(image){
@@ -97,30 +97,48 @@ const loginUser=async(req,res)=>{
             return res.status(400).json({message:"No user with this email"});
         }
         const passWordMatch=await comaparePassword(password,user.password);
-        console.log(passWordMatch);
-        // if(passWordMatch){
-        //     return res.status(400).json({message:"Name or password is wrong"})
-        // }
-        // res.status(200).json({
-        //     message:"Login successful",
-        //     user:{
-        //         name:user.name,
-        //         image:user.image,
-        //         phone:user.phone
-        //     }
-        //  })
-    } catch (error) {
         
+        if(!passWordMatch){
+            return res.status(400).json({message:"Name or password is wrong"})
+        }
+        // creating session for login user
+         req.session.userId=user.id
+        console.log(req.session);
+        res.status(200).json({
+           
+            message:"Login successful",
+            user:{
+                name:user.name,
+                image:user.image,
+                phone:user.phone
+            }
+         })
+         console.log(req.session)
+    } catch (error) {
+        res.status(500).json({message:"something went wrong"})
+    }
+}
+
+const userProfile=(req,res)=>{
+    try {
+
+        res.status(200).json({message:'user logged in'})
+    } catch (error) {
+        res.status(500).json({message:"somthing went wrong"})
     }
 }
 
 const logoutUser=(req,res)=>{
     try {
-        
+        req.session.destroy();
+        res.clearCookie("user_session")
+        res.status(200).json({message:"Logout succesful"})        
 
     } catch (error) {
-        
+        res.status(500).json({message:"Something went wrong"})  
     }
 }
 
-module.exports={createUser,verifyEmail,loginUser,logoutUser};
+
+
+module.exports={createUser,verifyEmail,loginUser,logoutUser,userProfile};

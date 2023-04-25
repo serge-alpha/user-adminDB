@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const dev = require("../config");
 
 const sendMail=async(Data)=> {
     try {
@@ -7,14 +8,14 @@ const sendMail=async(Data)=> {
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-      user: testAccount.user, // generated ethereal user
-      pass: testAccount.pass, // generated ethereal password
+      user: dev.app.emailAccont_username, // generated ethereal user
+      pass: dev.app.emailAccont_password, // generated ethereal password
     },
   });
 
   // creating mail object
   const emailContent={
-    from: '"Fred Foo 👻" <foo@example.com>', // sender address
+    from: 'SergeAlpha', // sender address
     to: Data.email, // list of receivers
     subject: Data.subject, // Subject line
     html: Data.html // html body
